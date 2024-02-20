@@ -102,11 +102,25 @@ public class CarServiceTest {
         carDTO.setModel("golf variant");
         carDTO.setBrand(GermanCarBrand.VOLKSWAGEN.name());
         try {
-            Long carId = carService.createCar(carDTO);
-
+            carService.createCar(carDTO);
             Mockito.verify(carRepository, Mockito.times(1)).persist(any(Car.class));
         } catch (WrongBrandException e) {
             Assertions.fail("WrongBrandException should not be thrown");
         }
+    }
+
+    @Test
+    public void createCarWrongBrandTest() {
+        CarDTO carDTO = new CarDTO();
+        carDTO.setModel("golf variant");
+        carDTO.setBrand("Toyota");
+
+        Assertions.assertThrows(WrongBrandException.class, () -> carService.createCar(carDTO));
+    }
+
+    @Test
+    public void deleteCarTest() {
+        carService.delete(1l);
+        Mockito.verify(carRepository, Mockito.times(1)).deleteById(1l);
     }
 }
