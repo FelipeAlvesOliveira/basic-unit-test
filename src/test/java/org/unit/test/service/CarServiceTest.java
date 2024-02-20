@@ -16,6 +16,7 @@ import org.unit.test.repository.CarRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -42,7 +43,7 @@ public class CarServiceTest {
         cars.add(golf);
         cars.add(passat);
 
-        Mockito.when(carRepository.findById(1l)).thenReturn(golf);
+        Mockito.when(carRepository.findByIdOptional(1l)).thenReturn(Optional.of(golf));
         Mockito.when(carRepository.listAll()).thenReturn(cars);
     }
 
@@ -54,8 +55,7 @@ public class CarServiceTest {
 
     @Test
     public void getByIdNotFoundTest() {
-        CarDTO carReturned = carService.getById(2l);
-        Assertions.assertNull(carReturned);
+        Assertions.assertThrows(NotFoundException.class, () -> carService.getById(2l));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class CarServiceTest {
         try {
             carService.updateCar(1l, carDTO);
 
-            Mockito.verify(carRepository, Mockito.times(1)).findById(1l);
+            Mockito.verify(carRepository, Mockito.times(1)).findByIdOptional(1l);
             Mockito.verify(carRepository, Mockito.times(1)).persist(any(Car.class));
         } catch (WrongBrandException e) {
             Assertions.fail("WrongBrandException should not be thrown");

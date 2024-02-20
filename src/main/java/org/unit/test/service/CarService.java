@@ -12,6 +12,7 @@ import org.unit.test.repository.CarRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 // Entidade será criada a cada requisição e depois eliminada
 @RequestScoped
@@ -21,8 +22,8 @@ public class CarService {
     @Inject
     CarRepository carRepository;
 
-    public CarDTO getById(Long id) {
-        Car car = carRepository.findById(id);
+    public CarDTO getById(long id) throws NotFoundException {
+        Car car = getCarOrThrowException(id);
         return Car.toDTO(car);
     }
 
@@ -40,16 +41,12 @@ public class CarService {
     public void updateCar(Long id, CarDTO carDTO) throws WrongBrandException {
         // check is german brand
         checkBrandIsGerman(carDTO.getBrand());
-
-        Car car = carRepository.findById(id);
-        if (car == null) {
-            throw new NotFoundException("Car with id "+id+" not found");
-        }
-
-        Car newCar = Car.fromDTO(carDTO);
-        newCar.setId(car.getId());
-
-        carRepository.persist(newCar);
+        // get car if exists
+        Car car = getCarOrThrowException(id);
+        // parse from dto to model
+        Car.mergeCarDTO(car, carDTO);
+        // persist data
+        carRepository.persist(car);
     }
 
     public Long createCar(CarDTO carDTO) throws WrongBrandException {
@@ -62,8 +59,14 @@ public class CarService {
         return newCar.getId();
     }
 
-    public void delete(Long id) {
+    public void delete(long id) {
         carRepository.deleteById(id);
+    }
+
+    private Car getCarOrThrowException(long id) {
+        Optional<Car> optional = carRepository.findByIdOptional(id);
+        return optional
+                .orElseThrow(() -> new NotFoundException("Car with id '" + id + "' not found"));
     }
 
     private void checkBrandIsGerman(String brand) throws WrongBrandException {

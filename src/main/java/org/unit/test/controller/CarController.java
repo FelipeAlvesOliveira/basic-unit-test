@@ -17,36 +17,69 @@ public class CarController {
     CarService carService;
 
     @GET
-    public List<CarDTO> getAllCars() {
-        return carService.getAll();
+    public Response getAllCars() {
+        return Response
+                .ok()
+                .entity(carService.getAll())
+                .build();
     }
     @GET
     @Path("/{id}")
-    public CarDTO getCarById(@RestPath Long id) {
-        return carService.getById(id);
+    public Response getCarById(@RestPath Long id) {
+        try {
+            CarDTO carDTO = carService.getById(id);
+            return Response.ok()
+                    .entity(carDTO)
+                    .build();
+        } catch (NotFoundException e) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 
     @PUT
     @Path("/{id}")
-    public void updateCar(@RestPath Long id, CarDTO car) {
+    public Response updateCar(@RestPath Long id, CarDTO car) {
         try {
             carService.updateCar(id, car);
-        } catch (WrongBrandException e) {
-            // TODO FELIPE: CHECK THIS EXCEPTION
-            throw new RuntimeException(e);
+            return Response
+                    .status(Response.Status.NO_CONTENT)
+                    .build();
+        } catch (WrongBrandException | NotFoundException e) {
+            var status = e instanceof WrongBrandException
+                    ? Response.Status.BAD_REQUEST
+                    : Response.Status.NOT_FOUND;
+            return Response
+                    .status(status)
+                    .entity(e.getMessage())
+                    .build();
         }
     }
 
     @POST
     @Consumes("application/json")
-    public Response createCar(CarDTO car) throws WrongBrandException {
-        Long id = carService.createCar(car);
-        return Response.created(URI.create("http://localhost:8080/cars/"+id)).build();
+    public Response createCar(CarDTO car) {
+        try {
+            Long id = carService.createCar(car);
+            return Response.created(URI.create("http://localhost:8080/cars/"+id))
+                    .entity(id)
+                    .build();
+        } catch (WrongBrandException e) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/{id}")
-    public void deleteCar(@RestPath Long id) {
+    public Response deleteCar(@RestPath Long id) {
         carService.delete(id);
+        return Response
+                .status(Response.Status.NO_CONTENT)
+                .build();
     }
 }

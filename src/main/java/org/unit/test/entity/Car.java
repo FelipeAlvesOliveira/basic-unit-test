@@ -91,9 +91,7 @@ public class Car {
         this.price = price;
     }
 
-
-    public static Car fromDTO(CarDTO carDTO) {
-        Car car = new Car();
+    public static Car mergeCarDTO(Car car, CarDTO carDTO) {
         car.setBrand(carDTO.getBrand());
         car.setColor(carDTO.getColor());
         car.setKilometers(carDTO.getKilometers());
@@ -101,6 +99,12 @@ public class Car {
         car.setPrice(carDTO.getPrice());
         car.setReleaseDate(carDTO.getReleaseDate());
         return car;
+    }
+
+
+    public static Car fromDTO(CarDTO carDTO) {
+        Car car = new Car();
+        return mergeCarDTO(car, carDTO);
     }
 
     public static CarDTO toDTO(Car car) {
